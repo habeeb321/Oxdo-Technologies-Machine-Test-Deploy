@@ -1,0 +1,98 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Handle Flutter route paths
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L,QSA]
+
+# MIME Types with enhanced mobile support
+AddType application/javascript .js
+AddType application/json .json
+AddType application/octet-stream .bin
+AddType application/wasm .wasm
+AddType font/woff2 .woff2
+AddType font/woff .woff
+AddType font/ttf .ttf
+
+# Optimize caching strategy for better mobile performance
+# Cache static assets aggressively
+<FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff2|woff|ttf|bin)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# Specific caching for main Flutter assets
+<FilesMatch "(index\.html|main\.dart\.js)$">
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
+    Header set Vary "Accept-Encoding"
+</FilesMatch>
+
+# Cache control for service worker
+<FilesMatch "flutter_service_worker\.js$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+</FilesMatch>
+
+# Enhanced compression settings
+<IfModule mod_deflate.c>
+    SetOutputFilter DEFLATE
+    # Add correct content-type for fonts
+    AddType application/vnd.ms-fontobject .eot
+    AddType application/x-font-ttf .ttf
+    AddType application/x-font-opentype .otf
+    AddType application/x-font-woff .woff
+    AddType image/svg+xml .svg
+
+    # Compress HTML, CSS, JavaScript, Text, XML and fonts
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE application/x-font-opentype
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font-woff
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+</IfModule>
+
+# Enable Keep-Alive
+<IfModule mod_headers.c>
+    Header set Connection keep-alive
+</IfModule>
+
+# Enable Gzip compression
+<IfModule mod_gzip.c>
+    mod_gzip_on Yes
+    mod_gzip_dechunk Yes
+    mod_gzip_item_include file \.(html?|xml|txt|css|js)$
+    mod_gzip_item_include handler ^cgi-script$
+    mod_gzip_item_include mime ^text/.*
+    mod_gzip_item_include mime ^application/x-javascript.*
+    mod_gzip_item_exclude mime ^image/.*
+    mod_gzip_item_exclude rspheader ^Content-Encoding:.*gzip.*
+</IfModule>
+
+# Set security headers with performance optimizations
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Enable HTTP/2 if available
+<IfModule mod_http2.c>
+    Protocols h2 h2c http/1.1
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Allow CORS with optimized settings
+<FilesMatch "\.(json|bin|woff2|woff|ttf)$">
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header set Access-Control-Max-Age "3600"
+</FilesMatch>
